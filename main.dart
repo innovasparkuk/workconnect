@@ -1,171 +1,216 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:workconnect/contractworkroom.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/intl.dart';
+import 'package:workroom/profile_setup.dart';
 
-void main() {
-  runApp(const WorkConnect());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
 }
 
-class WorkConnect extends StatelessWidget {
-  const WorkConnect({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WorkConnect',
-      theme: ThemeData(
-        primaryColor: const Color(0xFF66B2FF),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          secondary: const Color(0xFF00C853),
-        ),
-        textTheme: GoogleFonts.poppinsTextTheme(),
-        useMaterial3: true,
-      ),
-      home: const LandingPage(),
       debugShowCheckedModeBanner: false,
+      home: ProfileSetupApp(),
+      theme: ThemeData(
+        primaryColor: Color(0xFF66B2FF),
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          secondary: Color(0xFF66B2FF).withOpacity(0.8),
+        ),
+        fontFamily: 'Poppins',
+        textTheme: TextTheme(
+          // Define darker text colors for better visibility
+          bodyMedium: TextStyle(color: Color(0xFF424242)), // Dark gray instead of default
+          bodySmall: TextStyle(color: Color(0xFF616161)), // Medium gray
+          titleMedium: TextStyle(color: Color(0xFF212121)), // Very dark gray
+        ),
+      ),
     );
   }
 }
 
-class LandingPage extends StatefulWidget {
-  const LandingPage({super.key});
-
-  @override
-  State<LandingPage> createState() => _LandingPageState();
-}
-
-class _LandingPageState extends State<LandingPage> {
-  final TextEditingController _searchController = TextEditingController();
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Freelancer Profile",
+            style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
+        backgroundColor: Theme.of(context).primaryColor,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section
-            _buildHeader(),
+            // Profile Header with Photo and Name side by side
+            _buildCompactProfileHeader(context),
 
-            // Banner Section
-            _buildBanner(),
+            // Stats Section
+            _buildStatsSection(context),
 
-            // Popular Categories
-            _buildCategories(),
+            // Skills Section
+            _buildSkillsSection(context),
 
-            // Featured Freelancers
-            _buildFeaturedFreelancers(),
+            // About Section
+            _buildAboutSection(),
 
-            // Testimonials
-            _buildTestimonials(),
+            // Experience Section
+            _buildExperienceSection(context),
 
-            // Footer
-            _buildFooter(),
+            // Milestones Section (New)
+            _buildMilestonesSection(context),
+
+            // Action Buttons
+            _buildActionButtons(context),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildCompactProfileHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 2,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Theme.of(context).primaryColor.withOpacity(0.05),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Logo
+          // Profile Photo
           Container(
-            height: 50,
-              width: 50,
             decoration: BoxDecoration(
-              color: Color(0xFF66B2FF),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.green),
-              image: DecorationImage(
-                image: NetworkImage("https://copilot.microsoft.com/th/id/BCO.76bbf17c-4451-4512-aa61-013879bea5a3.png"),
-                fit: BoxFit.fill,
-              )
-            ),
-          ),
-          const SizedBox(width: 20),
-
-          // Search Bar
-          Expanded(
-            child: Container(
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Theme.of(context).primaryColor,
+                width: 3,
               ),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  hintText: 'Search freelancers...',
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.only(top: 10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
                 ),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 40,
+              backgroundImage: NetworkImage(
+                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
               ),
             ),
           ),
-          const SizedBox(width: 20),
 
-          // Buttons
-          TextButton(
-            onPressed: (
-                ) {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => ContractWorkroomPage(),));
-            },
-            child: Text(
-              'Login',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF1A1A1A),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF66B2FF),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(
-              'Sign Up',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00C853),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(
-              'Post a Job',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
+          const SizedBox(width: 16),
+
+          // Name and Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      "Prashant S.",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1976D2), // Darker blue for better contrast
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).primaryColor,
+                            Color(0xFF66B2FF).withOpacity(0.7),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        "Boosted",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  "Salesforce Architect | HubSpot Expert",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF424242), // Darker gray
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                Row(
+                  children: [
+                    Icon(Icons.location_on, size: 14, color: Color(0xFF616161)), // Darker icon
+                    SizedBox(width: 4),
+                    Text(
+                      "Mumbai, India",
+                      style: TextStyle(fontSize: 12, color: Color(0xFF616161)), // Darker text
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Availability Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.circle, size: 6, color: Colors.green),
+                      SizedBox(width: 4),
+                      Text(
+                        "Available now",
+                        style: TextStyle(
+                          color: Colors.green[800], // Darker green
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -173,509 +218,624 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  Widget _buildBanner() {
-    return Stack(
+  Widget _buildStatsSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildStatItem(context, "\$17/hr", "Rate"),
+            _buildStatItem(context, "100%", "Job Success"),
+            _buildStatItem(context, "\$60K+", "Earned"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(BuildContext context, String value, String label) {
+    return Column(
       children: [
-        Container(
-          height: 400,
-          width: double.infinity,
-          child: Image.network(
-            'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-            fit: BoxFit.cover,
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1976D2), // Darker blue
           ),
         ),
-
-        Container(
-          height: 400,
-          width: double.infinity,
-          decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.6)
-          ),
-        ),
-
-        // Phir Content (text aur search bar)
-        Container(
-          height: 400,
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Find the perfect freelance services for your business',
-                      style: GoogleFonts.poppins(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Connect with skilled freelancers from around the world on our secure and flexible platform.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Search for freelancers or services...',
-                                  hintStyle: GoogleFonts.poppins(),
-                                  border: InputBorder.none,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF00C853),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Search',
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Color(0xFF616161), // Darker gray
           ),
         ),
       ],
     );
   }
 
-  Widget _buildCategories() {
-    List<Map<String, dynamic>> categories = [
-      {'icon': Icons.code, 'title': 'Development & IT'},
-      {'icon': Icons.design_services, 'title': 'Design & Creative'},
-      {'icon': Icons.business, 'title': 'Business'},
-      {'icon': Icons.handshake, 'title': 'Marketing'},
-      {'icon': Icons.description, 'title': 'Writing & Translation'},
-      {'icon': Icons.architecture, 'title': 'Engineering & Architecture'},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 40),
-      color: Colors.white,
+  Widget _buildSkillsSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Popular Categories',
-            style: GoogleFonts.poppins(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Explore services across different categories',
-            style: GoogleFonts.poppins(
+            "Skills & Expertise",
+            style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 40),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: 2.5,
-            ),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 16),
-                    Icon(
-                      categories[index]['icon'],
-                      color: const Color(0xFF0066FF),
-                      size: 28,
-                    ),
-                    const SizedBox(width: 16),
-                    Text(
-                      categories[index]['title'],
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeaturedFreelancers() {
-    List<Map<String, dynamic>> freelancers = [
-      {
-        'name': 'Haider khan',
-        'title': 'UX/UI Designer',
-        'rating': 4.9,
-        'projects': 42,
-      },
-      {
-        'name': 'Richaer C',
-        'title': 'Full Stack Developer',
-        'rating': 4.8,
-        'projects': 57,
-      },
-      {
-        'name': 'Jhonson Wilson',
-        'title': 'Content Writer',
-        'rating': 4.7,
-        'projects': 35,
-      },
-    ];
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 40),
-      color: const Color(0xFFF8F9FA),
-      child: Column(
-        children: [
-          Text(
-            'Featured Freelancers',
-            style: GoogleFonts.poppins(
-              fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF1A1A1A),
+              color: Color(0xFF1976D2), // Darker blue
             ),
           ),
-          const SizedBox(height: 20),
-          Text(
-            'Discover top talent on our platform',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 40),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: freelancers.map((freelancer) {
-              return Container(
-                width: 300,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 2,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    const CircleAvatar(
-                      radius: 50,
-                      backgroundImage: AssetImage('assets/profile-placeholder.png'), // Add asset
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      freelancer['name'],
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      freelancer['title'],
-                      style: GoogleFonts.poppins(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          freelancer['rating'].toString(),
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Icon(
-                          Icons.work,
-                          color: Colors.grey,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${freelancer['projects']} projects',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0066FF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                      child: Text(
-                        'View Profile',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTestimonials() {
-    List<Map<String, dynamic>> testimonials = [
-      {
-        'text': 'This platform helped me find the perfect developer for my startup. The process was smooth and the quality of work exceeded my expectations.',
-        'author': 'Jibran Z',
-        'role': 'Startup Founder',
-      },
-      {
-        'text': 'As a freelancer, I\'ve been able to connect with clients from around the world and build a sustainable business doing what I love.',
-        'author': 'Mona Lisa',
-        'role': 'Graphic Designer',
-      },
-    ];
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 40),
-      color: Colors.white,
-      child: Column(
-        children: [
-          Text(
-            'What Our Users Say',
-            style: GoogleFonts.poppins(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Hear from our community of clients and freelancers',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 40),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: testimonials.map((testimonial) {
-              return Container(
-                width: 500,
-                padding: const EdgeInsets.all(30),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FA),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.format_quote,
-                      color: Color(0xFF0066FF),
-                      size: 36,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      testimonial['text'],
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontStyle: FontStyle.italic,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      testimonial['author'],
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      testimonial['role'],
-                      style: GoogleFonts.poppins(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFooter() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
-      color: const Color(0xFF1A1A1A),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'FreelancePro',
-                    style: GoogleFonts.poppins(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'The best platform to find skilled\nfreelancers and quality work.',
-                    style: GoogleFonts.poppins(
-                      color: Colors.grey[400],
-                    ),
-                  ),
-                ],
+              _buildSkillChip(context, "API Integration"),
+              _buildSkillChip(context, "Database Architecture"),
+              _buildSkillChip(context, "DevOps"),
+              _buildSkillChip(context, "Salesforce Service Cloud"),
+              _buildSkillChip(context, "Salesforce CPQ"),
+              _buildSkillChip(context, "HubSpot CRM"),
+              _buildSkillChip(context, "Flutter Development"),
+              _buildSkillChip(context, "+5 more"),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkillChip(BuildContext context, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          color: Color(0xFF1976D2), // Darker blue
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAboutSection() {
+    return const Padding(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "About Me",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1976D2), // Darker blue
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            "Certified Salesforce Developer, Consultant, and Business Analyst with over 10 years of experience in delivering robust CRM solutions. Specialized in Salesforce implementations, integrations, and custom development.",
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF424242), // Darker gray
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExperienceSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Experience",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1976D2), // Darker blue
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.business,
+                  color: Color(0xFF1976D2), // Darker blue
+                  size: 18,
+                ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'For Clients',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Audentes Technologies",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF212121), // Darker text
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text('How to Hire', style: GoogleFonts.poppins(color: Colors.grey[400])),
-                  const SizedBox(height: 8),
-                  Text('Talent Marketplace', style: GoogleFonts.poppins(color: Colors.grey[400])),
-                  const SizedBox(height: 8),
-                  Text('Payment Protection', style: GoogleFonts.poppins(color: Colors.grey[400])),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'For Freelancers',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    SizedBox(height: 2),
+                    Text(
+                      "Senior Salesforce Architect",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF424242), // Darker gray
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text('How to Find Work', style: GoogleFonts.poppins(color: Colors.grey[400])),
-                  const SizedBox(height: 8),
-                  Text('Get Paid', style: GoogleFonts.poppins(color: Colors.grey[400])),
-                  const SizedBox(height: 8),
-                  Text('Benefits', style: GoogleFonts.poppins(color: Colors.grey[400])),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Resources',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    SizedBox(height: 2),
+                    Text(
+                      "\$50K+ earned • 5+ years",
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF616161), // Darker gray
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text('Help & Support', style: GoogleFonts.poppins(color: Colors.grey[400])),
-                  const SizedBox(height: 8),
-                  Text('Success Stories', style: GoogleFonts.poppins(color: Colors.grey[400])),
-                  const SizedBox(height: 8),
-                  Text('Blog', style: GoogleFonts.poppins(color: Colors.grey[400])),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 40),
-          const Divider(color: Colors.grey),
-          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMilestonesSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
-            '© 2025 Workconnect. All rights reserved.',
-            style: GoogleFonts.poppins(
-              color: Colors.grey[400],
+            "Project Milestones",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1976D2), // Darker blue
             ),
+          ),
+          SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                _buildMilestoneItem(
+                  context,
+                  "Project Setup & Planning",
+                  "\$150",
+                  "Completed",
+                  Icons.check_circle,
+                  Colors.green[800]!, // Darker green
+                ),
+                _buildMilestoneItem(
+                  context,
+                  "UI/UX Design Implementation",
+                  "\$250",
+                  "In Progress",
+                  Icons.autorenew,
+                  Colors.orange[800]!, // Darker orange
+                ),
+                _buildMilestoneItem(
+                  context,
+                  "Backend Development",
+                  "\$350",
+                  "Pending",
+                  Icons.schedule,
+                  Colors.grey[700]!, // Darker gray
+                ),
+                _buildMilestoneItem(
+                  context,
+                  "Testing & Deployment",
+                  "\$250",
+                  "Pending",
+                  Icons.schedule,
+                  Colors.grey[700]!, // Darker gray
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Total Budget: \$1,000",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1976D2), // Darker blue
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  "40% Completed",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[800], // Darker green
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
+  Widget _buildMilestoneItem(BuildContext context, String title, String amount,
+      String status, IconData icon, Color statusColor) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.flag,
+              color: Color(0xFF1976D2), // Darker blue
+              size: 20,
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF212121), // Darker text
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  amount,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1976D2), // Darker blue
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 16,
+                    color: statusColor,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    status,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: statusColor,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 4),
+              if (status == "In Progress")
+                SizedBox(
+                  width: 80,
+                  child: LinearProgressIndicator(
+                    value: 0.7,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF1976D2), // Darker blue
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WorkroomChatScreen(
+                      roomId: "room1",
+                      currentUser: "client_id",
+                      otherUser: "freelancer_id",
+                    ),
+                  ),
+                );
+              },
+              icon: Icon(Icons.message, size: 18),
+              label: Text(
+                "Message",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF1976D2), // Darker blue
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Invite sent successfully!")),
+                );
+              },
+              icon: Icon(Icons.work, size: 18),
+              label: Text(
+                "Hire Now",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Color(0xFF1976D2), // Darker blue
+                side: BorderSide(color: Color(0xFF1976D2)), // Darker blue
+                padding: EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Chat Screen with blue theme (keep your existing implementation)
+class WorkroomChatScreen extends StatefulWidget {
+  final String roomId;
+  final String currentUser;
+  final String otherUser;
+
+  const WorkroomChatScreen({
+    required this.roomId,
+    required this.currentUser,
+    required this.otherUser,
+    Key? key,
+  }) : super(key: key);
+
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  _WorkroomChatScreenState createState() => _WorkroomChatScreenState();
+}
+
+class _WorkroomChatScreenState extends State<WorkroomChatScreen> {
+  final TextEditingController _controller = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  void _sendMessage() async {
+    if (_controller.text.trim().isEmpty) return;
+
+    await _firestore
+        .collection("chats")
+        .doc(widget.roomId)
+        .collection("messages")
+        .add({
+      "sender_id": widget.currentUser,
+      "receiver_id": widget.otherUser,
+      "message": _controller.text.trim(),
+      "timestamp": FieldValue.serverTimestamp(),
+    });
+
+    _controller.clear();
+  }
+
+  String _formatTime(Timestamp? timestamp) {
+    if (timestamp == null) return "";
+    DateTime date = timestamp.toDate();
+    return DateFormat('hh:mm a').format(date);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Chat", style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF1976D2), // Darker blue
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection("chats")
+                  .doc(widget.roomId)
+                  .collection("messages")
+                  .orderBy("timestamp", descending: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                var messages = snapshot.data!.docs;
+
+                return ListView.builder(
+                  padding: EdgeInsets.all(10),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    var msg = messages[index];
+                    bool isMe = msg["sender_id"] == widget.currentUser;
+                    String firstLetter =
+                    msg["sender_id"].substring(0, 1).toUpperCase();
+
+                    return Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: isMe
+                            ? MainAxisAlignment.end
+                            : MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!isMe)
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor: Color(0xFF1976D2), // Darker blue
+                              child: Text(firstLetter,
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white)),
+                            ),
+                          if (!isMe) SizedBox(width: 6),
+                          Flexible(
+                            child: Container(
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: isMe
+                                    ? Color(0xFF1976D2).withOpacity(0.2) // Darker blue
+                                    : Colors.grey[300],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: isMe
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    msg["message"],
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Color(0xFF212121), // Darker text
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    _formatTime(msg["timestamp"]),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (isMe) SizedBox(width: 6),
+                          if (isMe)
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor: Color(0xFF1976D2), // Darker blue
+                              child: Text(firstLetter,
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white)),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          Divider(height: 1),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            color: Colors.white,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: "Type a message...",
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send, color: Color(0xFF1976D2)), // Darker blue
+                  onPressed: _sendMessage,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
