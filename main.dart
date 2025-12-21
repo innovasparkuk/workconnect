@@ -1,841 +1,1140 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:intl/intl.dart';
-import 'package:workroom/profile_setup.dart';
+import 'package:fl_chart/fl_chart.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+void main() {
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ProfileSetupApp(),
+      title: 'Content Performance Report',
       theme: ThemeData(
-        primaryColor: Color(0xFF66B2FF),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          secondary: Color(0xFF66B2FF).withOpacity(0.8),
-        ),
-        fontFamily: 'Poppins',
+        primaryColor: Color(0xFF3498DB),
+        scaffoldBackgroundColor: Color(0xFFF7F9FC),
+        fontFamily: 'Roboto',
         textTheme: TextTheme(
-          // Define darker text colors for better visibility
-          bodyMedium: TextStyle(color: Color(0xFF424242)), // Dark gray instead of default
-          bodySmall: TextStyle(color: Color(0xFF616161)), // Medium gray
-          titleMedium: TextStyle(color: Color(0xFF212121)), // Very dark gray
+          headlineLarge: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2C3E50),
+          ),
+          titleMedium: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2C3E50),
+          ),
+          bodyMedium: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF2C3E50),
+          ),
+          labelSmall: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF2C3E50),
+          ),
         ),
       ),
+      home: ContentPerformanceReport(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
+class ContentPerformanceReport extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text("Freelancer Profile",
-            style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
-        backgroundColor: Theme.of(context).primaryColor,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Profile Header with Photo and Name side by side
-            _buildCompactProfileHeader(context),
+      backgroundColor: Color(0xFFF7F9FC),
+      body: SafeArea(
+        child: Center(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: 1000, // Increased width for better layout
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Header Section
+                  _buildHeaderSection(),
+                  SizedBox(height: 24),
 
-            // Stats Section
-            _buildStatsSection(context),
+                  // Middle Section - Three Columns
+                  _buildMiddleSection(),
+                  SizedBox(height: 24),
 
-            // Skills Section
-            _buildSkillsSection(context),
-
-            // About Section
-            _buildAboutSection(),
-
-            // Experience Section
-            _buildExperienceSection(context),
-
-            // Milestones Section (New)
-            _buildMilestonesSection(context),
-
-            // Action Buttons
-            _buildActionButtons(context),
-
-            const SizedBox(height: 24),
-          ],
+                  // Footer Section
+                  _buildFooterSection(),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCompactProfileHeader(BuildContext context) {
+  Widget _buildHeaderSection() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.05),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white,
+            Color(0xFFE8F4F8),
+          ],
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Profile Photo
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Theme.of(context).primaryColor,
-                width: 3,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: CircleAvatar(
-              radius: 40,
-              backgroundImage: NetworkImage(
-                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
-              ),
-            ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF3498DB).withOpacity(0.1),
+            blurRadius: 16,
+            offset: Offset(0, 6),
           ),
-
-          const SizedBox(width: 16),
-
-          // Name and Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      "Prashant S.",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1976D2), // Darker blue for better contrast
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Theme.of(context).primaryColor,
-                            Color(0xFF66B2FF).withOpacity(0.7),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        "Boosted",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  "Salesforce Architect | HubSpot Expert",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF424242), // Darker gray
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 14, color: Color(0xFF616161)), // Darker icon
-                    SizedBox(width: 4),
-                    Text(
-                      "Mumbai, India",
-                      style: TextStyle(fontSize: 12, color: Color(0xFF616161)), // Darker text
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // Availability Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.green),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.circle, size: 6, color: Colors.green),
-                      SizedBox(width: 4),
-                      Text(
-                        "Available now",
-                        style: TextStyle(
-                          color: Colors.green[800], // Darker green
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF3498DB),
+                      Color(0xFF2ECC71),
                     ],
                   ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
+                child: Icon(
+                  Icons.analytics,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Content Performance Report',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Period: August 2029',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF2C3E50).withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
+          SizedBox(height: 24),
+          _buildStatsBox(),
         ],
       ),
     );
   }
 
-  Widget _buildStatsSection(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
+  Widget _buildStatsBox() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Color(0xFFF0F7FF),
+            Color(0xFFE8F5E9),
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildStatItem(context, "\$17/hr", "Rate"),
-            _buildStatItem(context, "100%", "Job Success"),
-            _buildStatItem(context, "\$60K+", "Earned"),
-          ],
-        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFF3498DB).withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatItem('Total Reach', '950,920', Icons.people, Color(0xFF3498DB)),
+          _buildVerticalDivider(),
+          _buildStatItem('Engagement', '42.3%', Icons.trending_up, Color(0xFF2ECC71)),
+          _buildVerticalDivider(),
+          _buildStatItem('Website Traffic', '54,000', Icons.link, Color(0xFF9B59B6)),
+          _buildVerticalDivider(),
+          _buildStatItem('Avg. Session', '4:32m', Icons.timer, Color(0xFFF39C12)),
+        ],
       ),
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String value, String label) {
+  Widget _buildVerticalDivider() {
+    return Container(
+      width: 1,
+      height: 40,
+      color: Colors.grey.shade300,
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
     return Column(
       children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1976D2), // Darker blue
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 18,
+                color: color,
+              ),
+            ),
+            SizedBox(width: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 6),
         Text(
           label,
           style: TextStyle(
-            fontSize: 11,
-            color: Color(0xFF616161), // Darker gray
+            fontSize: 12,
+            color: Color(0xFF2C3E50).withOpacity(0.7),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSkillsSection(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Skills & Expertise",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1976D2), // Darker blue
+  Widget _buildMiddleSection() {
+    return Column(
+      children: [
+        // First Row - Two Charts
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildChartCard(
+                'Social Media Engagement',
+                _buildLineChart(),
+                Icons.show_chart,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _buildSkillChip(context, "API Integration"),
-              _buildSkillChip(context, "Database Architecture"),
-              _buildSkillChip(context, "DevOps"),
-              _buildSkillChip(context, "Salesforce Service Cloud"),
-              _buildSkillChip(context, "Salesforce CPQ"),
-              _buildSkillChip(context, "HubSpot CRM"),
-              _buildSkillChip(context, "Flutter Development"),
-              _buildSkillChip(context, "+5 more"),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSkillChip(BuildContext context, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          color: Color(0xFF1976D2), // Darker blue
-          fontWeight: FontWeight.w500,
+            SizedBox(width: 20),
+            Expanded(
+              child: _buildChartCard(
+                'Performance by Type',
+                _buildPieChart(),
+                Icons.pie_chart,
+              ),
+            ),
+          ],
         ),
-      ),
+        SizedBox(height: 20),
+
+        // Second Row - Two Charts
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildChartCard(
+                'Quarterly Sessions',
+                _buildQuarterLineChart(),
+                Icons.calendar_today,
+              ),
+            ),
+            SizedBox(width: 20),
+            Expanded(
+              child: _buildChartCard(
+                'Follower Growth',
+                _buildBarChart(),
+                Icons.bar_chart,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  Widget _buildAboutSection() {
-    return const Padding(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "About Me",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1976D2), // Darker blue
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            "Certified Salesforce Developer, Consultant, and Business Analyst with over 10 years of experience in delivering robust CRM solutions. Specialized in Salesforce implementations, integrations, and custom development.",
-            style: TextStyle(
-              fontSize: 13,
-              color: Color(0xFF424242), // Darker gray
-              height: 1.4,
-            ),
+  Widget _buildFooterSection() {
+    return _buildChartCard(
+      'Peak Engagement Times',
+      _buildDonutChart(),
+      Icons.access_time,
+    );
+  }
+
+  Widget _buildChartCard(String title, Widget chart, IconData icon) {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white, // Changed to solid white
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF3498DB).withOpacity(0.1),
+            blurRadius: 16,
+            offset: Offset(0, 6),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildExperienceSection(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Experience",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1976D2), // Darker blue
-            ),
-          ),
-          const SizedBox(height: 10),
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                padding: EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF3498DB),
+                      Color(0xFF2ECC71),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.business,
-                  color: Color(0xFF1976D2), // Darker blue
+                  icon,
                   size: 18,
+                  color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Audentes Technologies",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF212121), // Darker text
+              SizedBox(width: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C3E50),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          chart,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLineChart() {
+    return Container(
+      height: 200, // Changed from 220 to 200 to match pie chart height
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: 12), // Reduced padding
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildSeriesLegend('Instagram', Color(0xFF3498DB)),
+                _buildSeriesLegend('Facebook', Color(0xFF2ECC71)),
+                _buildSeriesLegend('Twitter', Color(0xFF9B59B6)),
+                _buildSeriesLegend('LinkedIn', Color(0xFFF39C12)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: BarChart(
+              BarChartData(
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    tooltipBgColor: Colors.white,
+                    tooltipBorder: BorderSide(color: Color(0xFF3498DB), width: 1),
+                    tooltipRoundedRadius: 8,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      return BarTooltipItem(
+                        'Week ${group.x + 1}\n${rod.toY.toInt()}k engagement',
+                        TextStyle(
+                          color: Color(0xFF3498DB),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                alignment: BarChartAlignment.spaceAround,
+                minY: 0,
+                maxY: 50,
+                groupsSpace: 20,
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        return Padding(
+                          padding: EdgeInsets.only(top: 6), // Reduced padding
+                          child: Text(
+                            'Week ${value.toInt() + 1}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF2C3E50).withOpacity(0.7),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 10,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          '${value.toInt()}k',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF2C3E50).withOpacity(0.7),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(
+                    color: Color(0xFF3498DB).withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: 10,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Color(0xFF3498DB).withOpacity(0.1),
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                barGroups: [
+                  BarChartGroupData(
+                    x: 0,
+                    barRods: [
+                      BarChartRodData(
+                        toY: 10,
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF3498DB),
+                            Color(0xFF2ECC71),
+                          ],
+                        ),
+                        width: 24,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(6),
+                          topRight: Radius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                  BarChartGroupData(
+                    x: 1,
+                    barRods: [
+                      BarChartRodData(
+                        toY: 25,
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF3498DB),
+                            Color(0xFF2ECC71),
+                          ],
+                        ),
+                        width: 24,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(6),
+                          topRight: Radius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                  BarChartGroupData(
+                    x: 2,
+                    barRods: [
+                      BarChartRodData(
+                        toY: 15,
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF3498DB),
+                            Color(0xFF2ECC71),
+                          ],
+                        ),
+                        width: 24,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(6),
+                          topRight: Radius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                  BarChartGroupData(
+                    x: 3,
+                    barRods: [
+                      BarChartRodData(
+                        toY: 35,
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF3498DB),
+                            Color(0xFF2ECC71),
+                          ],
+                        ),
+                        width: 24,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(6),
+                          topRight: Radius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                  BarChartGroupData(
+                    x: 4,
+                    barRods: [
+                      BarChartRodData(
+                        toY: 20,
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF3498DB),
+                            Color(0xFF2ECC71),
+                          ],
+                        ),
+                        width: 24,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(6),
+                          topRight: Radius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSeriesLegend(String text, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 16,
+          height: 4,
+          color: color,
+        ),
+        SizedBox(width: 6),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            color: Color(0xFF2C3E50).withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPieChart() {
+    return Container(
+      height: 200, // Same height as line chart
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 0,
+                centerSpaceRadius: 50,
+                sections: [
+                  PieChartSectionData(
+                    value: 64.9,
+                    color: Color(0xFF3498DB),
+                    radius: 55,
+                    title: '64.9%',
+                    titleStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  PieChartSectionData(
+                    value: 21.2,
+                    color: Color(0xFF2ECC71),
+                    radius: 55,
+                    title: '21.2%',
+                    titleStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  PieChartSectionData(
+                    value: 7.9,
+                    color: Color(0xFF9B59B6),
+                    radius: 55,
+                    title: '7.9%',
+                    titleStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  PieChartSectionData(
+                    value: 6.0,
+                    color: Color(0xFFF39C12),
+                    radius: 55,
+                    title: '6.0%',
+                    titleStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLegendItem('Video', Color(0xFF3498DB)),
+                SizedBox(height: 8),
+                _buildLegendItem('Picture', Color(0xFF2ECC71)),
+                SizedBox(height: 8),
+                _buildLegendItem('Text', Color(0xFF9B59B6)),
+                SizedBox(height: 8),
+                _buildLegendItem('Link', Color(0xFFF39C12)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color,
+                color.withOpacity(0.8),
+              ],
+            ),
+            shape: BoxShape.circle,
+          ),
+        ),
+        SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Color(0xFF2C3E50),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuarterLineChart() {
+    return Container(
+      height: 180, // Changed from 220 to 180 to match follower growth chart height
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: 12), // Reduced padding
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildSeriesLegend('Series 1', Color(0xFF3498DB)),
+                _buildSeriesLegend('Series 2', Color(0xFF2ECC71)),
+                _buildSeriesLegend('Series 3', Color(0xFF9B59B6)),
+                _buildSeriesLegend('Series 4', Color(0xFFF39C12)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white, // White background for chart area
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: LineChart(
+                LineChartData(
+                  minX: 0,
+                  maxX: 4,
+                  minY: 0,
+                  maxY: 50,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: true,
+                    horizontalInterval: 10,
+                    verticalInterval: 1,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Color(0xFF3498DB).withOpacity(0.1),
+                        strokeWidth: 1,
+                      );
+                    },
+                    getDrawingVerticalLine: (value) {
+                      return FlLine(
+                        color: Color(0xFF3498DB).withOpacity(0.05),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 1,
+                        getTitlesWidget: (value, meta) {
+                          List<String> months = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5'];
+                          return Padding(
+                            padding: EdgeInsets.only(top: 4),
+                            child: Text(
+                              months[value.toInt()],
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF2C3E50).withOpacity(0.7),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      "Senior Salesforce Architect",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF424242), // Darker gray
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 10,
+                        getTitlesWidget: (value, meta) {
+                          return Padding(
+                            padding: EdgeInsets.only(right: 4),
+                            child: Text(
+                              value.toInt().toString(),
+                              style: TextStyle(
+                                fontSize: 10, // Smaller font size
+                                color: Color(0xFF2C3E50).withOpacity(0.7),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      "\$50K+ earned • 5+ years",
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF616161), // Darker gray
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(
+                      color: Color(0xFF3498DB).withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: [
+                        FlSpot(0, 15),
+                        FlSpot(1, 30),
+                        FlSpot(2, 20),
+                        FlSpot(3, 40),
+                        FlSpot(4, 25),
+                      ],
+                      isCurved: false,
+                      color: Color(0xFF3498DB),
+                      barWidth: 3,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, bar, index) {
+                          return FlDotCirclePainter(
+                            radius: 4,
+                            color: Colors.white,
+                            strokeWidth: 2,
+                            strokeColor: Color(0xFF3498DB),
+                          );
+                        },
+                      ),
+                      belowBarData: BarAreaData(
+                        show: false,
+                      ),
+                    ),
+                    LineChartBarData(
+                      spots: [
+                        FlSpot(0, 10),
+                        FlSpot(1, 25),
+                        FlSpot(2, 35),
+                        FlSpot(3, 20),
+                        FlSpot(4, 45),
+                      ],
+                      isCurved: false,
+                      color: Color(0xFF2ECC71),
+                      barWidth: 3,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, bar, index) {
+                          return FlDotCirclePainter(
+                            radius: 4,
+                            color: Colors.white,
+                            strokeWidth: 2,
+                            strokeColor: Color(0xFF2ECC71),
+                          );
+                        },
+                      ),
+                    ),
+                    LineChartBarData(
+                      spots: [
+                        FlSpot(0, 20),
+                        FlSpot(1, 15),
+                        FlSpot(2, 25),
+                        FlSpot(3, 35),
+                        FlSpot(4, 30),
+                      ],
+                      isCurved: false,
+                      color: Color(0xFF9B59B6),
+                      barWidth: 3,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, bar, index) {
+                          return FlDotCirclePainter(
+                            radius: 4,
+                            color: Colors.white,
+                            strokeWidth: 2,
+                            strokeColor: Color(0xFF9B59B6),
+                          );
+                        },
+                      ),
+                    ),
+                    LineChartBarData(
+                      spots: [
+                        FlSpot(0, 5),
+                        FlSpot(1, 20),
+                        FlSpot(2, 10),
+                        FlSpot(3, 30),
+                        FlSpot(4, 15),
+                      ],
+                      isCurved: false,
+                      color: Color(0xFFF39C12),
+                      barWidth: 3,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, bar, index) {
+                          return FlDotCirclePainter(
+                            radius: 4,
+                            color: Colors.white,
+                            strokeWidth: 2,
+                            strokeColor: Color(0xFFF39C12),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMilestonesSection(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Project Milestones",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1976D2), // Darker blue
-            ),
-          ),
-          SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildMilestoneItem(
-                  context,
-                  "Project Setup & Planning",
-                  "\$150",
-                  "Completed",
-                  Icons.check_circle,
-                  Colors.green[800]!, // Darker green
-                ),
-                _buildMilestoneItem(
-                  context,
-                  "UI/UX Design Implementation",
-                  "\$250",
-                  "In Progress",
-                  Icons.autorenew,
-                  Colors.orange[800]!, // Darker orange
-                ),
-                _buildMilestoneItem(
-                  context,
-                  "Backend Development",
-                  "\$350",
-                  "Pending",
-                  Icons.schedule,
-                  Colors.grey[700]!, // Darker gray
-                ),
-                _buildMilestoneItem(
-                  context,
-                  "Testing & Deployment",
-                  "\$250",
-                  "Pending",
-                  Icons.schedule,
-                  Colors.grey[700]!, // Darker gray
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Total Budget: \$1,000",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1976D2), // Darker blue
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  "40% Completed",
-                  style: TextStyle(
-                    fontSize: 12,
+  Widget _buildBarChart() {
+    return Container(
+      height: 180,
+      child: BarChart(
+        BarChartData(
+          barTouchData: BarTouchData(
+            enabled: true,
+            touchTooltipData: BarTouchTooltipData(
+              tooltipBgColor: Colors.white,
+              tooltipBorder: BorderSide(color: Color(0xFF3498DB), width: 1),
+              tooltipRoundedRadius: 8,
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                String platform;
+                Color color;
+                switch (group.x) {
+                  case 0:
+                    platform = 'Photo';
+                    color = Color(0xFF3498DB);
+                    break;
+                  case 1:
+                    platform = 'Video';
+                    color = Color(0xFF2ECC71);
+                    break;
+                  case 2:
+                    platform = 'Text';
+                    color = Color(0xFF9B59B6);
+                    break;
+                  case 3:
+                    platform = 'Link';
+                    color = Color(0xFFF39C12);
+                    break;
+                  default:
+                    platform = 'Unknown';
+                    color = Colors.grey;
+                }
+                return BarTooltipItem(
+                  '$platform\n${rod.toY.toInt()} followers',
+                  TextStyle(
+                    color: color,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green[800], // Darker green
+                    fontSize: 12,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: '\nGrowth: ${(rod.toY / 5000 * 100).toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        color: Color(0xFF2C3E50).withOpacity(0.7),
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          alignment: BarChartAlignment.spaceAround,
+          minY: 0,
+          maxY: 6000,
+          groupsSpace: 20,
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  List<String> titles = ['Photo', 'Video', 'Text', 'Link'];
+                  return Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      titles[value.toInt()],
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF2C3E50).withOpacity(0.7),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 2000,
+                getTitlesWidget: (value, meta) {
+                  if (value == 0) return SizedBox();
+                  return Text(
+                    '${(value / 1000).toStringAsFixed(0)}k',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Color(0xFF2C3E50).withOpacity(0.7),
+                    ),
+                  );
+                },
+              ),
+            ),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: 2000,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: Color(0xFF3498DB).withOpacity(0.1),
+                strokeWidth: 1,
+              );
+            },
+          ),
+          borderData: FlBorderData(
+            show: true,
+            border: Border.all(
+              color: Color(0xFF3498DB).withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          barGroups: [
+            BarChartGroupData(
+              x: 0,
+              barRods: [
+                BarChartRodData(
+                  toY: 5000,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF3498DB),
+                      Color(0xFF2ECC71),
+                    ],
+                  ),
+                  width: 24,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(6),
+                    topRight: Radius.circular(6),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            BarChartGroupData(
+              x: 1,
+              barRods: [
+                BarChartRodData(
+                  toY: 2000,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF3498DB),
+                      Color(0xFF2ECC71),
+                    ],
+                  ),
+                  width: 24,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(6),
+                    topRight: Radius.circular(6),
+                  ),
+                ),
+              ],
+            ),
+            BarChartGroupData(
+              x: 2,
+              barRods: [
+                BarChartRodData(
+                  toY: 1000,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF3498DB),
+                      Color(0xFF2ECC71),
+                    ],
+                  ),
+                  width: 24,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(6),
+                    topRight: Radius.circular(6),
+                  ),
+                ),
+              ],
+            ),
+            BarChartGroupData(
+              x: 3,
+              barRods: [
+                BarChartRodData(
+                  toY: 500,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF3498DB),
+                      Color(0xFF2ECC71),
+                    ],
+                  ),
+                  width: 24,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(6),
+                    topRight: Radius.circular(6),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDonutChart() {
+    return Container(
+      height: 140,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildTimeSegment('Morning', 8, Color(0xFF3498DB)),
+          _buildTimeSegment('Afternoon', 26, Color(0xFF2ECC71)),
+          _buildTimeSegment('Evening', 34, Color(0xFF9B59B6)),
+          _buildTimeSegment('Night', 32, Color(0xFF34495E)),
         ],
       ),
     );
   }
 
-  Widget _buildMilestoneItem(BuildContext context, String title, String amount,
-      String status, IconData icon, Color statusColor) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
-              shape: BoxShape.circle,
+  Widget _buildTimeSegment(String time, int percentage, Color color) {
+    final size = 70.0;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: size,
+              height: size,
+              child: CircularProgressIndicator(
+                value: percentage / 100,
+                strokeWidth: 6,
+                backgroundColor: Color(0xFFE8F4F8),
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
             ),
-            child: Icon(
-              Icons.flag,
-              color: Color(0xFF1976D2), // Darker blue
-              size: 20,
-            ),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  title,
+                  '$percentage%',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF212121), // Darker text
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  amount,
-                  style: TextStyle(
-                    fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1976D2), // Darker blue
+                    color: color,
+                  ),
+                ),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF2C3E50).withOpacity(0.7),
                   ),
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    icon,
-                    size: 16,
-                    color: statusColor,
-                  ),
-                  SizedBox(width: 4),
-                  Text(
-                    status,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: statusColor,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 4),
-              if (status == "In Progress")
-                SizedBox(
-                  width: 80,
-                  child: LinearProgressIndicator(
-                    value: 0.7,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF1976D2), // Darker blue
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WorkroomChatScreen(
-                      roomId: "room1",
-                      currentUser: "client_id",
-                      otherUser: "freelancer_id",
-                    ),
-                  ),
-                );
-              },
-              icon: Icon(Icons.message, size: 18),
-              label: Text(
-                "Message",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF1976D2), // Darker blue
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Invite sent successfully!")),
-                );
-              },
-              icon: Icon(Icons.work, size: 18),
-              label: Text(
-                "Hire Now",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Color(0xFF1976D2), // Darker blue
-                side: BorderSide(color: Color(0xFF1976D2)), // Darker blue
-                padding: EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Chat Screen with blue theme (keep your existing implementation)
-class WorkroomChatScreen extends StatefulWidget {
-  final String roomId;
-  final String currentUser;
-  final String otherUser;
-
-  const WorkroomChatScreen({
-    required this.roomId,
-    required this.currentUser,
-    required this.otherUser,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  _WorkroomChatScreenState createState() => _WorkroomChatScreenState();
-}
-
-class _WorkroomChatScreenState extends State<WorkroomChatScreen> {
-  final TextEditingController _controller = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  void _sendMessage() async {
-    if (_controller.text.trim().isEmpty) return;
-
-    await _firestore
-        .collection("chats")
-        .doc(widget.roomId)
-        .collection("messages")
-        .add({
-      "sender_id": widget.currentUser,
-      "receiver_id": widget.otherUser,
-      "message": _controller.text.trim(),
-      "timestamp": FieldValue.serverTimestamp(),
-    });
-
-    _controller.clear();
-  }
-
-  String _formatTime(Timestamp? timestamp) {
-    if (timestamp == null) return "";
-    DateTime date = timestamp.toDate();
-    return DateFormat('hh:mm a').format(date);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Chat", style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xFF1976D2), // Darker blue
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection("chats")
-                  .doc(widget.roomId)
-                  .collection("messages")
-                  .orderBy("timestamp", descending: false)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                var messages = snapshot.data!.docs;
-
-                return ListView.builder(
-                  padding: EdgeInsets.all(10),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    var msg = messages[index];
-                    bool isMe = msg["sender_id"] == widget.currentUser;
-                    String firstLetter =
-                    msg["sender_id"].substring(0, 1).toUpperCase();
-
-                    return Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: isMe
-                            ? MainAxisAlignment.end
-                            : MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (!isMe)
-                            CircleAvatar(
-                              radius: 14,
-                              backgroundColor: Color(0xFF1976D2), // Darker blue
-                              child: Text(firstLetter,
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white)),
-                            ),
-                          if (!isMe) SizedBox(width: 6),
-                          Flexible(
-                            child: Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: isMe
-                                    ? Color(0xFF1976D2).withOpacity(0.2) // Darker blue
-                                    : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: isMe
-                                    ? CrossAxisAlignment.end
-                                    : CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    msg["message"],
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Color(0xFF212121), // Darker text
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    _formatTime(msg["timestamp"]),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (isMe) SizedBox(width: 6),
-                          if (isMe)
-                            CircleAvatar(
-                              radius: 14,
-                              backgroundColor: Color(0xFF1976D2), // Darker blue
-                              child: Text(firstLetter,
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white)),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          Divider(height: 1),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            color: Colors.white,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: "Type a message...",
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send, color: Color(0xFF1976D2)), // Darker blue
-                  onPressed: _sendMessage,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
