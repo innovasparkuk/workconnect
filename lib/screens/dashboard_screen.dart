@@ -1,318 +1,509 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_drawer.dart';
-import '../widgets/summary_card.dart';
-import '../widgets/line_chart.dart'; // ✅ only keep line chart
-import '../models/transaction_model.dart';
-import '../widgets/transaction_tile.dart';
-import '../theme.dart';
+import '../utils/constants.dart';
+import '../widgets/custom_bottom_nav.dart';
+import 'overview_screen.dart';
+import 'jobs_screen.dart';
+import 'analytics_screen.dart';
+import 'messages_screen.dart';
+import 'profile_screen.dart';
+import 'create_job_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
-
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  _DashboardScreenState createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  List<AppTransaction> sampleTxs = [
-    AppTransaction(
-        title: 'Payment Received',
-        subtitle: 'Client payment for services',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        amount: 2500.0,
-        type: 'income',
-        status: 'completed'),
-    AppTransaction(
-        title: 'Purchase at Food',
-        subtitle: 'Grocery store',
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        amount: -85.5,
-        type: 'expense',
-        status: 'completed'),
-    AppTransaction(
-        title: 'Bank Transfer',
-        subtitle: 'To savings',
-        date: DateTime.now().subtract(const Duration(days: 3)),
-        amount: 1000.0,
-        type: 'transfer',
-        status: 'pending'),
-    AppTransaction(
-        title: 'Purchase at Transport',
-        subtitle: 'Taxi ride',
-        date: DateTime.now().subtract(const Duration(days: 4)),
-        amount: -24.75,
-        type: 'expense',
-        status: 'completed'),
-    AppTransaction(
-        title: 'Freelance Payment',
-        subtitle: 'Website project',
-        date: DateTime.now().subtract(const Duration(days: 5)),
-        amount: 1200.0,
-        type: 'income',
-        status: 'completed'),
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = [
+    OverviewScreen(),
+    JobsScreen(),
+    AnalyticsScreen(),
+    MessagesScreen(),
+    ProfileScreen(),
+  ];
+  final List<String> _appBarTitles = [
+    "Dashboard Overview",
+    "Jobs Management",
+    "Performance Analytics",
+    //"Flagged Content",
+    "My Profile"
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const CustomDrawer(currentRoute: '/'),
+      backgroundColor: AppColors.backgroundWhite,
       appBar: AppBar(
-        title: const Row(
+        title: Text(
+          _appBarTitles[_currentIndex],
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDark,
+          ),
+        ),
+        backgroundColor: AppColors.cardWhite, // White background
+        elevation: 2, // Light shadow
+        foregroundColor: AppColors.textDark, // Back button color
+        actions: _buildAppBarActions(),
+      ),
+      body: _screens[_currentIndex],
+      floatingActionButton: _currentIndex == 1 ? _buildFloatingActionButton() : null,
+      bottomNavigationBar: CustomBottomNavigation(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+      ),
+    );
+  }
+
+  List<Widget> _buildAppBarActions() {
+    return [
+      IconButton(
+        icon: Stack(
           children: [
-            SizedBox(width: 6),
-            Text('Dashboard', style: TextStyle(color: Colors.black87)),
+            Icon(Icons.notifications_outlined, color: AppColors.textDark),
+            Positioned(
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: AppColors.error,
+                  shape: BoxShape.circle,
+                ),
+                constraints: BoxConstraints(minWidth: 14, minHeight: 14),
+                child: Text(
+                  '3',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
           ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 14),
-            child: Row(
-              children: [
-                // ✅ Transactions gradient button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                  onPressed: () =>
-                      Navigator.pushNamed(context, '/transactions'),
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [kAccentLight, kPrimaryLight],
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.swap_horiz, color: Colors.white),
-                          SizedBox(width: 6),
-                          Text('Transactions',
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
+        onPressed: () => _showNotifications(),
+      ),
+      IconButton(
+        icon: Icon(Icons.search, color: AppColors.textDark),
+        onPressed: () => _showSearch(),
+      ),
+      PopupMenuButton<String>(
+        icon: Icon(Icons.more_vert, color: AppColors.textDark),
+        onSelected: (value) => _handleMenuSelection(value),
+        itemBuilder: (BuildContext context) {
+          return {
+            'Create New Job',
+            'Settings',
+            'Help & Support',
+            'Logout'
+          }.map((String choice) {
+            return PopupMenuItem<String>(
+              value: choice,
+              child: Text(choice),
+            );
+          }).toList();
+        },
+      ),
+    ];
+  }
 
-                // ✅ Reports gradient button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                  onPressed: () => Navigator.pushNamed(context, '/reports'),
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [kPrimaryLight,kAccentLight],
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.show_chart, color: Colors.white),
-                          SizedBox(width: 6),
-                          Text('Reports',
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                  ),
+  Widget _buildFloatingActionButton() {
+    return FloatingActionButton(
+      onPressed: () => _createNewJob(),
+      backgroundColor: AppColors.primaryGreen,
+      child: Icon(Icons.add, color: Colors.white, size: 28),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    );
+  }
+
+  void _showNotifications() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Notifications feature coming soon!'),
+        backgroundColor: AppColors.primaryBlue,
+      ),
+    );
+  }
+
+  void _showSearch() {
+    showSearch(
+      context: context,
+      delegate: JobSearchDelegate(),
+    );
+  }
+
+  void _handleMenuSelection(String value) {
+    switch (value) {
+      case 'Create New Job':
+        _createNewJob();
+        break;
+      case 'Settings':
+        _showSettings();
+        break;
+      case 'Help & Support':
+        _showHelp();
+        break;
+      case 'Logout':
+        _logout();
+        break;
+    }
+  }
+
+  void _createNewJob() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CreateJobScreen()),
+    );
+  }
+
+  void _showSettings() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Settings feature coming soon!'),
+        backgroundColor: AppColors.primaryGreen,
+      ),
+    );
+  }
+
+  void _showHelp() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Help & Support feature coming soon!'),
+        backgroundColor: AppColors.warning,
+      ),
+    );
+  }
+
+  void _logout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Logout"),
+        content: Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Logged out successfully!'),
+                  backgroundColor: AppColors.success,
                 ),
-              ],
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
             ),
-          )
+            child: Text("Logout"),
+          ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-        child: Column(
-          children: [
-            // top tab-like toggle
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(0.03), blurRadius: 8)
-                ],
-              ),
-              padding: const EdgeInsets.all(12),
-              child: const Row(
-                children: [
-                  Expanded(
-                      child: Text('Overview',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontWeight: FontWeight.w600))),
-                  Expanded(child: Text('Generate', textAlign: TextAlign.center)),
-                  Expanded(child: Text('History', textAlign: TextAlign.center)),
-                ],
-              ),
+    );
+  }
+}
+
+class JobSearchDelegate extends SearchDelegate<String> {
+  final List<String> _searchHistory = [
+    'Flutter Developer',
+    'UI/UX Designer',
+    'Project Manager',
+    'React Native'
+  ];
+
+  final List<Map<String, String>> _allJobs = [
+    {
+      'title': 'Senior Flutter Developer',
+      'company': 'Tech Solutions Inc.',
+      'salary': '\$5,000',
+      'type': 'Full-time',
+      'location': 'Remote',
+      'posted': '2 days ago',
+      'logo': 'TS'
+    },
+    {
+      'title': 'UI/UX Designer',
+      'company': 'Creative Studio',
+      'salary': '\$3,500',
+      'type': 'Contract',
+      'location': 'New York',
+      'posted': '1 day ago',
+      'logo': 'CS'
+    },
+    {
+      'title': 'Project Manager',
+      'company': 'Business Solutions',
+      'salary': '\$6,000',
+      'type': 'Full-time',
+      'location': 'San Francisco',
+      'posted': '3 days ago',
+      'logo': 'BS'
+    },
+    {
+      'title': 'React Native Developer',
+      'company': 'Mobile First Ltd.',
+      'salary': '\$4,500',
+      'type': 'Remote',
+      'location': 'Remote',
+      'posted': '5 hours ago',
+      'logo': 'MF'
+    },
+    {
+      'title': 'Backend Developer',
+      'company': 'Data Systems Corp',
+      'salary': '\$5,500',
+      'type': 'Full-time',
+      'location': 'Austin',
+      'posted': '1 week ago',
+      'logo': 'DS'
+    },
+    {
+      'title': 'Junior Flutter Developer',
+      'company': 'Startup Ventures',
+      'salary': '\$3,000',
+      'type': 'Internship',
+      'location': 'Remote',
+      'posted': 'Just now',
+      'logo': 'SV'
+    },
+  ];
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(
+          icon: Icon(Icons.clear),
+          onPressed: () => query = '',
+        ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, '');
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final List<Map<String, String>> results = _allJobs.where((job) =>
+        job['title']!.toLowerCase().contains(query.toLowerCase())).toList();
+
+    return results.isEmpty
+        ? Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off, size: 64, color: AppColors.textGrey),
+          SizedBox(height: 16),
+          Text(
+            'No results found for "$query"',
+            style: TextStyle(
+              fontSize: 18,
+              color: AppColors.textDark,
             ),
+          ),
+        ],
+      ),
+    )
+        : ListView.builder(
+      padding: EdgeInsets.all(16),
+      itemCount: results.length,
+      itemBuilder: (context, index) => _buildJobCard(results[index], context),
+    );
+  }
 
-            const SizedBox(height: 16),
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final List<Map<String, String>> suggestionList = query.isEmpty
+        ? []
+        : _allJobs.where((job) =>
+        job['title']!.toLowerCase().contains(query.toLowerCase())).toList();
 
-            // Summary Cards Row
+    return query.isEmpty
+        ? ListView.builder(
+      padding: EdgeInsets.all(16),
+      itemCount: _searchHistory.length,
+      itemBuilder: (context, index) => ListTile(
+        leading: Icon(Icons.history, color: AppColors.primaryBlue),
+        title: Text(_searchHistory[index]),
+        onTap: () {
+          query = _searchHistory[index];
+          showResults(context);
+        },
+      ),
+    )
+        : ListView.builder(
+      padding: EdgeInsets.all(16),
+      itemCount: suggestionList.length,
+      itemBuilder: (context, index) => _buildJobCard(suggestionList[index], context),
+    );
+  }
+
+  Widget _buildJobCard(Map<String, String> job, BuildContext context) {
+    return Card(
+      elevation: 4,
+      margin: EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.cardWhite,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    job['title']!,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryGreen.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    job['type']!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.primaryGreen,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
             Row(
               children: [
+                CircleAvatar(
+                  backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                  radius: 16,
+                  child: Text(
+                    job['logo']!,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
                 Expanded(
-                    child: SummaryCard(
-                        title: 'Total Revenue',
-                        value: '\$45,280.00',
-                        icon: Icons.attach_money,
-                        valueColor: Colors.green)),
-                const SizedBox(width: 12),
-                Expanded(
-                    child: SummaryCard(
-                        title: 'Total Expenses',
-                        value: '\$28,150.00',
-                        icon: Icons.money_off,
-                        valueColor: Colors.red)),
-                const SizedBox(width: 12),
-                Expanded(
-                    child: SummaryCard(
-                        title: 'Profit Margin',
-                        value: '37.8%',
-                        icon: Icons.pie_chart_outline,
-                        valueColor: kAccentLight)),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Monthly Trends with Line Chart
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Monthly Trends',
-                    style: TextStyle(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                SimpleLineChart(
-                  values: [2000, 4000, 10000, 8000, 7000, 6000, 10000, 5000, 9000, 7000, 6000, 4000],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        job['company']!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        job['location']!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textGrey,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-
-            const SizedBox(height: 18),
-
-            // Generate New Report UI (simplified)
-            Card(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
                   children: [
-                    const Text('Generate New Report',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        'Daily',
-                        'Weekly',
-                        'Monthly',
-                        'Yearly',
-                        'Custom'
-                      ].map((label) {
-                        return ChoiceChip(
-                            label: Text(label),
-                            selected: label == 'Daily',
-                            onSelected: (_) {});
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        'Revenue',
-                        'Expenses',
-                        'Profit',
-                        'Users',
-                        'Orders'
-                      ].map((label) {
-                        return FilterChip(
-                            label: Text(label),
-                            selected: label == 'Revenue',
-                            onSelected: (_) {});
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // ✅ Gradient Generate Report button
-                    // ✅ Gradient Generate Report button
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () {
-                        // Navigate to Reports & Analytics page
-                        Navigator.pushNamed(context, '/reports');
-                      },
-                      child: Ink(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xD0267685), // deepPurple
-                              Color(0xFF178E76), // teal-like accent
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Container(
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.insert_drive_file_rounded, color: Colors.white),
-                              SizedBox(width: 6),
-                              Text('Generate Report',
-                                  style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                        ),
+                    Icon(Icons.attach_money, size: 16, color: AppColors.primaryGreen),
+                    SizedBox(width: 4),
+                    Text(
+                      job['salary']!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryGreen,
                       ),
                     ),
-
                   ],
+                ),
+                Row(
+                  children: [
+                    Icon(Icons.schedule, size: 14, color: AppColors.textGrey),
+                    SizedBox(width: 4),
+                    Text(
+                      job['posted']!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textGrey,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Container(
+              height: 40,
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  close(context, job['title']!);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'View Details',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-
-            const SizedBox(height: 18),
-
-            // Recent Transactions
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Recent Transactions',
-                    style: TextStyle(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 6),
-                ...sampleTxs.map((t) => TransactionTile(tx: t)).toList(),
-              ],
-            ),
-
-            const SizedBox(height: 40),
           ],
         ),
       ),
