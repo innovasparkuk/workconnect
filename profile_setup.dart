@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:myapp2/contractworkroom.dart';
+
 void main() {
   runApp(ProfileSetupApp());
 }
@@ -370,83 +372,92 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             ),
           ),
           // Navigation buttons
-          Container(
-            padding: EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 10,
-                  offset: Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                if (_currentStep > 0)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        if (_currentStep > 0) {
-                          setState(() {
-                            _currentStep--;
-                            _pageController.previousPage(
-                              duration: Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          });
-                        }
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+          Center(
+            child: Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_currentStep > 0)
+
+                    SizedBox(
+                        width: 200,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            if (_currentStep > 0) {
+                              setState(() {
+                                _currentStep--;
+                                _pageController.previousPage(
+                                  duration: Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              });
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text('Back'),
                         ),
                       ),
-                      child: Text('Back'),
-                    ),
-                  ),
-                if (_currentStep > 0) SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_currentStep < 2) {
-                        if (_currentStep == 0 && _formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                        }
 
-                        setState(() {
-                          _currentStep++;
-                          _pageController.nextPage(
-                            duration: Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        });
-                      } else {
+                  if (_currentStep > 0) SizedBox(width: 16),
 
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          // Process data
-                          _showCompletionDialog();
-                        }
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                 SizedBox(
+                      width: 200,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_currentStep < 2) {
+                            if (_currentStep == 0 && _formKey.currentState!.validate()) {
+                              _formKey.currentState!.save();
+                            }
+
+                            setState(() {
+                              _currentStep++;
+                              _pageController.nextPage(
+                                duration: Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            });
+                          } else {
+
+                            if (_formKey.currentState!.validate()) {
+                              _formKey.currentState!.save();
+                              // Process data
+                              _showCompletionDialog();
+                            }
+                          }
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ContractWorkroomPage(),));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          backgroundColor: Color(0xFF0066FF),
+                        ),
+                        child: Text(
+                          _currentStep == 2 ? 'Complete Profile' : 'Next',
+                          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+                        ),
                       ),
-                      backgroundColor: Color(0xFF0066FF),
                     ),
-                    child: Text(
-                      _currentStep == 2 ? 'Complete Profile' : 'Next',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
+
+                ],
+              ),
             ),
           ),
         ],
@@ -523,71 +534,86 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ],
             ),
             SizedBox(height: 32),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Full Name',
-                prefixIcon: Icon(Icons.person_outline_rounded),
+            SizedBox(
+              width: 400,
+              child: TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  prefixIcon: Icon(Icons.person_outline_rounded),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your name';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _fullName = value!,
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your name';
-                }
-                return null;
-              },
-              onSaved: (value) => _fullName = value!,
             ),
             SizedBox(height: 16),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Job Title',
-                prefixIcon: Icon(Icons.work_outline_rounded),
+            SizedBox(
+              width: 400,
+              child: TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Job Title',
+                  prefixIcon: Icon(Icons.work_outline_rounded),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                controller: _jobTitleController, // ✅ Controller used
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your job title';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _jobTitle = value!,
               ),
-              controller: _jobTitleController, // ✅ Controller used
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your job title';
-                }
-                return null;
-              },
-              onSaved: (value) => _jobTitle = value!,
             ),
             SizedBox(height: 16),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email_outlined),
+            SizedBox(
+              width: 400,
+              child: TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email_outlined),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _email = value!,
               ),
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your email';
-                }
-                if (!value.contains('@')) {
-                  return 'Please enter a valid email';
-                }
-                return null;
-              },
-              onSaved: (value) => _email = value!,
             ),
             SizedBox(height: 16),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Bio',
-                alignLabelWithHint: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            SizedBox(
+              width: 400,
+              child: TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Bio',
+                  alignLabelWithHint: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                ),
+                controller: _bioController,
+                maxLines: 4,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please tell us about yourself';
+                  }
+                  if (value.length < 50) {
+                    return 'Please write at least 50 characters';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _bio = value!,
               ),
-              controller: _bioController,
-              maxLines: 4,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please tell us about yourself';
-                }
-                if (value.length < 50) {
-                  return 'Please write at least 50 characters';
-                }
-                return null;
-              },
-              onSaved: (value) => _bio = value!,
             ),
             SizedBox(height: 24),
           ],
@@ -874,30 +900,34 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           SizedBox(height: 24),
           GestureDetector(
             onTap: () => _addPortfolioItem(),
-            child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300, width: 1.5),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF0066FF).withOpacity(0.1),
-                      shape: BoxShape.circle,
+            child: Center(
+              child: Container(
+                width: 400,
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300, width: 1.5),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF0066FF).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.add_rounded, color: Color(0xFF0066FF)),
                     ),
-                    child: Icon(Icons.add_rounded, color: Color(0xFF0066FF)),
-                  ),
-                  SizedBox(width: 16),
-                  Text(
-                    'Add portfolio item',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ],
+                    SizedBox(width: 16),
+
+                    Text(
+                      'Add portfolio item',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1117,25 +1147,36 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             ),
           ),
           SizedBox(height: 24),
-          TextField(
-            decoration: InputDecoration(
-              labelText: 'Project Title',
+          SizedBox(
+            width: 300,
+            child: Center(
+              child: TextField(
+                decoration: InputDecoration(
+                  labelText: 'Project Title',
+                ),
+                onChanged: (value) => title = value,
+              ),
             ),
-            onChanged: (value) => title = value,
           ),
           SizedBox(height: 16),
-          TextField(
-            decoration: InputDecoration(
-              labelText: 'Description',
+          SizedBox(
+            width: 300,
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Description',
+              ),
+              onChanged: (value) => description = value,
             ),
-            onChanged: (value) => description = value,
           ),
           SizedBox(height: 16),
-          TextField(
-            decoration: InputDecoration(
-              labelText: 'Link (optional)',
+          SizedBox(
+            width: 300,
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Link (optional)',
+              ),
+              onChanged: (value) => link = value,
             ),
-            onChanged: (value) => link = value,
           ),
           SizedBox(height: 32),
           Row(
